@@ -1,0 +1,22 @@
+# Echo 应用 Docker Compose 配置
+
+services:
+  echo-app:
+    build: .
+    ports:
+      - "3000:80"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
+      - DEBUG=false
+    restart: unless-stopped
+    volumes:
+      # 可选：持久化日志
+      - ./logs:/var/log
+    networks:
+      - echo-network
+
+networks:
+  echo-network:
+    driver: bridge
