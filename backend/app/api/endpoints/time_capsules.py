@@ -26,8 +26,13 @@ async def create_time_capsule(
     supabase = get_supabase_client()
     
     # 准备数据
+    capsule_data = capsule.dict()
+    # 将datetime对象转换为ISO格式字符串
+    if capsule_data.get("unlock_date"):
+        capsule_data["unlock_date"] = capsule_data["unlock_date"].isoformat()
+    
     data = {
-        **capsule.dict(),
+        **capsule_data,
         "user_id": str(user_id),
         "status": "locked"
     }
