@@ -4,6 +4,7 @@ FastAPI主应用入口
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+import os
 from app.core.config import get_settings
 from app.api.endpoints import auth, time_capsules, echo_wall
 
@@ -34,7 +35,9 @@ app.include_router(time_capsules.router, prefix="/api")
 app.include_router(echo_wall.router, prefix="/api")
 
 # 挂载静态文件（用于前端）
-app.mount("/assets", StaticFiles(directory="static", html=False), name="static")
+static_dir = "static"
+if os.path.isdir(static_dir):
+    app.mount("/assets", StaticFiles(directory=static_dir, html=False), name="static")
 
 
 @app.get("/")

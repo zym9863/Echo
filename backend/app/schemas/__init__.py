@@ -1,16 +1,39 @@
 """
 Pydantic数据模型定义
 """
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, field_validator
 from datetime import datetime
 from typing import Optional, Literal
 from uuid import UUID
+import re
+
+# Optional EmailStr: fall back to str with regex validation if email-validator isn't installed
+try:
+    import email_validator  # type: ignore  # noqa: F401
+    from pydantic import EmailStr as PydanticEmailStr
+    EmailType = PydanticEmailStr
+    _USE_REGEX_EMAIL_VALIDATION = False
+except Exception:
+    EmailType = str
+    _USE_REGEX_EMAIL_VALIDATION = True
 
 
 # ============ 用户相关模型 ============
 class UserBase(BaseModel):
     """用户基础模型"""
-    email: EmailStr
+    email: EmailType
+
+    # When email-validator isn't available, validate with a conservative regex
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str):
+        if not _USE_REGEX_EMAIL_VALIDATION:
+            return v
+        # Simple RFC5322-ish regex; not perfect, but reasonable fallback
+        pattern = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+        if not isinstance(v, str) or not pattern.match(v):
+            raise ValueError("Invalid email format")
+        return v
 
 
 class UserCreate(UserBase):
