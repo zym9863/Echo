@@ -36,8 +36,12 @@
       <div class="echo-sections">
         <div class="echo-section">
           <h2 class="section-title">我的呼喊</h2>
-          
-          <div v-if="myEchoes.length === 0" class="empty-state">
+
+          <div v-if="loading" class="loading-state">
+            <div class="loading-text">正在加载...</div>
+          </div>
+
+          <div v-else-if="myEchoes.length === 0" class="empty-state">
             <div class="empty-state-text">还没有发出呼喊</div>
           </div>
           
@@ -116,14 +120,24 @@ const { myEchoes, myMatches, recentEchoes, emotionTags } = storeToRefs(echoWallS
 const newEcho = ref('')
 const selectedEmotion = ref('')
 const sending = ref(false)
+const loading = ref(true)
 
 onMounted(async () => {
-  await Promise.all([
-    echoWallStore.fetchEmotionTags(),
-    echoWallStore.fetchMyEchoes(),
-    echoWallStore.fetchMyMatches(),
-    echoWallStore.fetchRecentEchoes()
-  ])
+  loading.value = true
+  try {
+    // 优先加载情感标签（用户交互需要）
+    await echoWallStore.fetchEmotionTags()
+
+    // 然后按优先级顺序加载其他数据，避免并发请求导致的资源竞争
+    await echoWallStore.fetchMyEchoes()
+    await echoWallStore.fetchMyMatches()
+    await echoWallStore.fetchRecentEchoes()
+  } catch (error) {
+    console.error('加载数据失败:', error)
+    // 即使部分数据加载失败，也不影响页面基本功能
+  } finally {
+    loading.value = false
+  }
 })
 
 /**
@@ -143,8 +157,22 @@ const sendEcho = async () => {
       echoWallStore.fetchMyEchoes(),
       echoWallStore.fetchRecentEchoes()
     ])
-  } catch (error) {
-    alert('发送失败，请稍后重试')
+  } catch (error: any) {
+    console.error('发送呼喊失败:', error)
+
+    // 根据错误类型提供更具体的错误信息
+    let errorMessage = '发送失败，请稍后重试'
+    if (error.code === 'ECONNABORTED') {
+      errorMessage = '网络连接超时，请检查网络连接后重试'
+    } else if (error.response?.status === 401) {
+      errorMessage = '登录已过期，请重新登录'
+    } else if (error.response?.status >= 500) {
+      errorMessage = '服务器暂时不可用，请稍后重试'
+    } else if (error.response?.data?.detail) {
+      errorMessage = error.response.data.detail
+    }
+
+    alert(errorMessage)
   } finally {
     sending.value = false
   }
@@ -351,6 +379,16 @@ const formatTime = (date: string) => {
 .echo-time {
   font-size: 12px;
   color: #999;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.loading-text {
+  color: #666;
+  font-size: 16px;
 }
 
 @media (max-width: 768px) {

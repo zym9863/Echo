@@ -81,7 +81,18 @@ export const useEchoWallStore = defineStore('echoWall', {
         this.myEchoes = response
         return response
       } catch (error: any) {
-        this.error = error.response?.data?.detail || '获取失败'
+        console.error('获取我的呼喊失败:', error)
+
+        // 根据错误类型设置更具体的错误信息
+        if (error.code === 'ECONNABORTED') {
+          this.error = '网络连接超时，请检查网络连接'
+        } else if (error.response?.status === 401) {
+          this.error = '登录已过期，请重新登录'
+        } else if (error.response?.status >= 500) {
+          this.error = '服务器暂时不可用，请稍后重试'
+        } else {
+          this.error = error.response?.data?.detail || '获取失败'
+        }
         throw error
       } finally {
         this.loading = false
@@ -99,7 +110,17 @@ export const useEchoWallStore = defineStore('echoWall', {
         this.myMatches = response
         return response
       } catch (error: any) {
-        this.error = error.response?.data?.detail || '获取失败'
+        console.error('获取匹配失败:', error)
+
+        if (error.code === 'ECONNABORTED') {
+          this.error = '网络连接超时，请检查网络连接'
+        } else if (error.response?.status === 401) {
+          this.error = '登录已过期，请重新登录'
+        } else if (error.response?.status >= 500) {
+          this.error = '服务器暂时不可用，请稍后重试'
+        } else {
+          this.error = error.response?.data?.detail || '获取失败'
+        }
         throw error
       } finally {
         this.loading = false

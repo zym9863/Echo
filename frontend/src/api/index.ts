@@ -1,10 +1,10 @@
 import axios from 'axios'
-import { API_BASE_URL } from '../config'
+import { API_BASE_URL, NETWORK_CONFIG } from '../config'
 
 // 创建axios实例
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: NETWORK_CONFIG.API_TIMEOUT, // 使用配置文件中的超时设置
   headers: {
     'Content-Type': 'application/json'
   }
