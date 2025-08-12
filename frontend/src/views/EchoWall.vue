@@ -72,7 +72,9 @@
                 <div class="match-label">你的呼喊</div>
                 <p class="echo-content">{{ getMyEchoFromMatch(match)?.content }}</p>
               </div>
-              <div class="match-arrow">↔️</div>
+              <div class="match-arrow">
+                <span class="arrow-icon">⇄</span>
+              </div>
               <div class="match-echo">
                 <div class="match-label">收到的回音</div>
                 <p class="echo-content">{{ getMatchedEcho(match)?.content }}</p>

@@ -1,69 +1,92 @@
 <template>
   <div class="page-container">
     <div class="container">
-      <div class="page-header">
-        <h1 class="page-title">我的时空信箱</h1>
-        <router-link to="/time-capsules/create" class="btn btn-primary">
+      <div class="page-header animate-fadeInDown">
+        <h1 class="page-title gradient-text">我的时空信箱</h1>
+        <router-link to="/time-capsules/create" class="btn btn-primary hover-lift">
+          <span class="btn-icon">+</span>
           创建新信箱
         </router-link>
       </div>
       
-      <div v-if="loading" class="loading">加载中...</div>
+      <!-- 骨架屏加载 -->
+      <div v-if="loading" class="capsules-grid">
+        <div v-for="i in 6" :key="i" class="skeleton skeleton-card"></div>
+      </div>
       
-      <div v-else-if="capsules.length === 0" class="empty-state">
-        <div class="empty-state-icon">📮</div>
+      <div v-else-if="capsules.length === 0" class="empty-state animate-fadeIn">
+        <div class="empty-state-icon animate-float">📮</div>
         <div class="empty-state-text">还没有时空信箱</div>
-        <router-link to="/time-capsules/create" class="btn btn-primary">
+        <router-link to="/time-capsules/create" class="btn btn-primary hover-lift">
           创建第一个时空信箱
         </router-link>
       </div>
       
-      <div v-else class="capsules-grid">
-        <div v-for="capsule in capsules" :key="capsule.id" class="capsule-card">
-          <div class="capsule-header">
-            <h3 class="capsule-title">{{ capsule.title }}</h3>
-            <span :class="['capsule-status', `status-${capsule.status}`]">
-              {{ getStatusText(capsule.status) }}
-            </span>
-          </div>
-          
-          <p class="capsule-content">{{ truncateText(capsule.content, 100) }}</p>
-          
-          <div class="capsule-meta">
-            <span v-if="capsule.unlock_date" class="meta-item">
-              🔓 {{ formatUnlockDate(capsule.unlock_date) }}
-            </span>
-            <span v-if="capsule.unlock_condition" class="meta-item">
-              📝 {{ capsule.unlock_condition }}
-            </span>
-            <span class="meta-item">
-              📅 {{ formatDate(capsule.created_at) }}
-            </span>
-          </div>
-          
-          <div class="capsule-actions">
-            <router-link 
-              :to="`/time-capsules/${capsule.id}`" 
-              class="btn btn-secondary btn-sm"
-            >
-              查看详情
-            </router-link>
+      <!-- 时间轴布局 -->
+      <div v-else class="timeline-container">
+        <div class="timeline-line"></div>
+        <div 
+          v-for="(capsule, index) in capsules" 
+          :key="capsule.id" 
+          :class="['timeline-item', index % 2 === 0 ? 'left' : 'right', 'animate-fadeIn']"
+          :style="`animation-delay: ${index * 0.1}s`"
+        >
+          <div class="timeline-dot"></div>
+          <div class="capsule-card hover-lift">
+            <div class="capsule-header">
+              <h3 class="capsule-title">{{ capsule.title }}</h3>
+              <span :class="['capsule-status', `status-${capsule.status}`]">
+                <span class="status-dot"></span>
+                {{ getStatusText(capsule.status) }}
+              </span>
+            </div>
             
-            <button 
-              v-if="capsule.status === 'locked' && canUnlock(capsule)"
-              @click="handleUnlock(capsule.id)"
-              class="btn btn-primary btn-sm"
-            >
-              解锁
-            </button>
+            <p class="capsule-content">{{ truncateText(capsule.content, 100) }}</p>
             
-            <button 
-              v-if="capsule.status === 'unlocked'"
-              @click="handlePublish(capsule.id)"
-              class="btn btn-secondary btn-sm"
-            >
-              发布到回音廊
-            </button>
+            <div class="capsule-meta">
+              <span v-if="capsule.unlock_date" class="meta-item">
+                <span class="meta-icon">🔓</span>
+                {{ formatUnlockDate(capsule.unlock_date) }}
+              </span>
+              <span v-if="capsule.unlock_condition" class="meta-item">
+                <span class="meta-icon">📝</span>
+                {{ capsule.unlock_condition }}
+              </span>
+              <span class="meta-item">
+                <span class="meta-icon">📅</span>
+                {{ formatDate(capsule.created_at) }}
+              </span>
+            </div>
+            
+            <div class="capsule-actions">
+              <router-link 
+                :to="`/time-capsules/${capsule.id}`" 
+                class="btn btn-glass btn-sm hover-grow"
+              >
+                查看详情
+              </router-link>
+              
+              <button 
+                v-if="capsule.status === 'locked' && canUnlock(capsule)"
+                @click="handleUnlock(capsule.id)"
+                class="btn btn-primary btn-sm hover-grow animate-pulse"
+              >
+                <span class="btn-icon">🔓</span>
+                解锁
+              </button>
+              
+              <button 
+                v-if="capsule.status === 'unlocked'"
+                @click="handlePublish(capsule.id)"
+                class="btn btn-secondary btn-sm hover-grow"
+              >
+                <span class="btn-icon">🌍</span>
+                发布到回音廊
+              </button>
+            </div>
+            
+            <!-- 装饰元素 -->
+            <div class="capsule-decoration"></div>
           </div>
         </div>
       </div>
@@ -165,104 +188,281 @@ const handlePublish = async (id: string) => {
 </script>
 
 <style scoped>
+@import '../styles/animations.css';
+@import '../styles/variables.css';
+
 .page-container {
   min-height: calc(100vh - 70px);
-  padding: 40px 0;
-  background: #f8f9fa;
+  padding: 60px 0;
+  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 60px;
 }
 
-.capsules-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 24px;
+.btn-icon {
+  margin-right: 8px;
+  font-size: 20px;
+  vertical-align: middle;
 }
 
+/* 时间轴布局 */
+.timeline-container {
+  position: relative;
+  padding: 20px 0;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--primary-gradient);
+  transform: translateX(-50%);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 50px;
+  width: 45%;
+}
+
+.timeline-item.left {
+  left: 0;
+  text-align: right;
+}
+
+.timeline-item.right {
+  left: 55%;
+  text-align: left;
+}
+
+.timeline-dot {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border: 4px solid var(--color-primary);
+  border-radius: 50%;
+  top: 20px;
+  z-index: 2;
+}
+
+.timeline-item.left .timeline-dot {
+  right: -47px;
+}
+
+.timeline-item.right .timeline-dot {
+  left: -47px;
+}
+
+.timeline-dot::after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: rgba(124, 58, 237, 0.2);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 2s infinite;
+}
+
+/* 卡片样式 */
 .capsule-card {
   background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s, box-shadow 0.3s;
+  border-radius: var(--border-radius-lg);
+  padding: 30px;
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  width: 100%;
+  text-align: left;
 }
 
-.capsule-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+.capsule-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--primary-gradient);
+  transform: scaleX(0);
+  transition: transform var(--transition-normal);
+  transform-origin: left;
+}
+
+.capsule-card:hover::before {
+  transform: scaleX(1);
 }
 
 .capsule-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .capsule-title {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
   margin: 0;
   flex: 1;
 }
 
 .capsule-status {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: var(--border-radius-full);
+  font-size: 14px;
+  font-weight: 600;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
 }
 
 .status-locked {
-  background: #fff3e0;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
   color: #f57c00;
 }
 
+.status-locked .status-dot {
+  background: #f57c00;
+  animation: blink 2s infinite;
+}
+
 .status-unlocked {
-  background: #e8f5e9;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   color: #388e3c;
 }
 
+.status-unlocked .status-dot {
+  background: #388e3c;
+}
+
 .status-public {
-  background: #e3f2fd;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
   color: #1976d2;
 }
 
+.status-public .status-dot {
+  background: #1976d2;
+}
+
 .capsule-content {
-  color: #666;
-  line-height: 1.6;
-  margin-bottom: 16px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 20px;
+  font-size: 16px;
 }
 
 .capsule-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 20px;
+  margin-bottom: 24px;
   font-size: 14px;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+}
+
+.meta-icon {
+  font-size: 16px;
 }
 
 .capsule-actions {
   display: flex;
-  gap: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .btn-sm {
-  padding: 8px 16px;
+  padding: 10px 20px;
   font-size: 14px;
+}
+
+.capsule-decoration {
+  position: absolute;
+  bottom: -100px;
+  right: -100px;
+  width: 200px;
+  height: 200px;
+  background: var(--primary-gradient);
+  opacity: 0.05;
+  border-radius: 50%;
+  transition: all var(--transition-normal);
+}
+
+.capsule-card:hover .capsule-decoration {
+  transform: scale(1.5) rotate(45deg);
+  opacity: 0.1;
+}
+
+/* 网格布局（备用） */
+.capsules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 30px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .timeline-line {
+    left: 20px;
+  }
+  
+  .timeline-item {
+    width: calc(100% - 40px);
+    left: 40px !important;
+  }
+  
+  .timeline-item.left,
+  .timeline-item.right {
+    text-align: left;
+  }
+  
+  .timeline-item.left .timeline-dot,
+  .timeline-item.right .timeline-dot {
+    left: -30px;
+    right: auto;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+  
+  .capsule-actions {
+    flex-direction: column;
+  }
+  
+  .btn-sm {
+    width: 100%;
+  }
 }
 </style>
