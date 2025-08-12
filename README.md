@@ -68,6 +68,8 @@ docker-compose up -d
 ```env
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
+# optional but recommended for backend service access under RLS
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 SECRET_KEY=your_secret_key
 ```
 

@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     # Supabase配置
     supabase_url: str
     supabase_anon_key: str
+    # 可选：服务角色密钥（用于后端服务端访问，绕过RLS）
+    supabase_service_role_key: str | None = None
 
     # JWT配置
     secret_key: str = "change-this-secret-key-in-production"
