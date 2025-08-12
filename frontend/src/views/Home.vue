@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useTimeCapsuleStore } from '../stores/timeCapsule'
 import { storeToRefs } from 'pinia'

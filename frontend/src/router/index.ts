@@ -64,20 +64,15 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach((to) => {
   const authStore = useAuthStore()
-  
-  // 需要认证的路由
+
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    next('/login')
+    return { path: '/login' }
+  } else if (to.meta.requiresGuest && authStore.isAuthenticated) {
+    return { path: '/' }
   }
-  // 需要游客身份的路由（登录/注册页）
-  else if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    next('/')
-  }
-  else {
-    next()
-  }
+  // allow navigation
 })
 
 export default router
