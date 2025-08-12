@@ -33,10 +33,9 @@ RUN apt-get update && apt-get install -y \
 RUN pip install uv
 
 # 复制后端代码和依赖
-COPY backend/pyproject.toml backend/.env ./backend/
+COPY backend/pyproject.toml ./backend/
 COPY backend/app ./backend/app
 COPY backend/main.py ./backend/
-COPY backend/static ./backend/static
 
 # 安装后端依赖
 WORKDIR /app/backend
